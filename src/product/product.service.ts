@@ -65,9 +65,7 @@ export class ProductService extends PrismaClient implements OnModuleInit {
   }
 
   async remove(id: number) {
-
     await this.findOne(id);
-
     const productDeleted = await this.product.update({
       where: {id},
       data: {
@@ -76,4 +74,29 @@ export class ProductService extends PrismaClient implements OnModuleInit {
     })
     return productDeleted;
   }
+
+  async validateProducts(ids: number[]){
+    //Con esto Set* creo ids que no esten duplicados
+    //Luego con Array.from los convierto en array
+    ids = Array.from(new Set(ids));
+
+    const productsFound = await this.product.findMany({
+      where: {
+        id: {
+          in: ids
+        }
+      }
+    })
+
+    if(productsFound.length !== ids.length){
+      throw new RpcException({
+        message: `Some products were not found`,
+        status: HttpStatus.BAD_REQUEST
+      })
+    }
+
+    return productsFound;
+
+  }
+
 }
